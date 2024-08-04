@@ -4345,7 +4345,7 @@ public class BukkitQuester implements Quester {
                             getCurrentStage(quest).getFailAction().fire(this, quest));
                 }
                 hardQuit(quest);
-            } else if (giveReason) {
+            } else if (giveReason && quest.getOptions().canSendConditionFailMessage()) {
                 if (System.currentTimeMillis() - lastNotifiedCondition > (plugin.getConfigSettings()
                         .getConditionInterval() * 1000L)) {
                     BukkitActionBarProvider.sendActionBar(getPlayer(), ChatColor.YELLOW + BukkitLang.get(getPlayer(),

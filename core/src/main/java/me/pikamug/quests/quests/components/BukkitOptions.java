@@ -10,8 +10,6 @@
 
 package me.pikamug.quests.quests.components;
 
-import me.pikamug.quests.quests.components.Options;
-
 public class BukkitOptions implements Options {
     private boolean allowCommands = true;
     private boolean allowQuitting = true;
@@ -23,7 +21,8 @@ public class BukkitOptions implements Options {
     private int shareProgressLevel = 1;
     private boolean shareSameQuestOnly = true;
     private boolean ignoreBlockReplace = true;
-    
+    private boolean sendConditionFailMessage = true;
+
     public boolean canAllowCommands() {
         return allowCommands;
     }
@@ -103,4 +102,16 @@ public class BukkitOptions implements Options {
     public void setIgnoreBlockReplace(final boolean ignoreBlockReplace) {
         this.ignoreBlockReplace = ignoreBlockReplace;
     }
+
+    @Override
+    public void setSendConditionFailMessage(boolean sendConditionFailMessage) {
+        this.sendConditionFailMessage = sendConditionFailMessage;
+    }
+
+    @Override
+    public boolean canSendConditionFailMessage() {
+        return sendConditionFailMessage;
+    }
+
+
 }

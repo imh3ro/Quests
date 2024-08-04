@@ -151,6 +151,7 @@ public class Key {
     public static final String OPT_SHARE_DISTANCE = "shareDistance";
     public static final String OPT_HANDLE_OFFLINE_PLAYERS = "handleOfflinePlayers";
     public static final String OPT_IGNORE_BLOCK_REPLACE = "ignoreBlockReplace";
+    public static final String OPT_SEND_CONDITION_FAIL_MESSAGE = "sendConditionFailMessage";
     // Actions
     public static final String A_OLD_ACTION = "oldAction";
     public static final String A_NAME = "actName";

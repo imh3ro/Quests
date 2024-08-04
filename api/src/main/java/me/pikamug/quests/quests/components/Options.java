@@ -50,4 +50,6 @@ public interface Options {
     boolean canIgnoreBlockReplace();
 
     void setIgnoreBlockReplace(final boolean ignoreBlockReplace);
+    void setSendConditionFailMessage(final boolean sendConditionFailMessage);
+    boolean canSendConditionFailMessage();
 }
