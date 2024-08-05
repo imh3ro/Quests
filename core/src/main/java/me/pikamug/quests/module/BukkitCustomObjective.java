@@ -233,7 +233,15 @@ public class BukkitCustomObjective implements CustomObjective, Listener {
                             continue;
                         }
                         final int old = customObjCounts.get(index);
-                        bukkitQuestProgress.customObjectiveCounts.set(index, old + count);
+
+                        // If old progress is higher than goal, we don't increase the progress.
+                        if (old>= customObj.getCount())
+                            return;
+
+                        // Clamp the progress at goal
+                        int newProgress = Math.min(old + count, customObj.getCount());
+
+                        bukkitQuestProgress.customObjectiveCounts.set(index, newProgress);
                         break;
                     }
                 }

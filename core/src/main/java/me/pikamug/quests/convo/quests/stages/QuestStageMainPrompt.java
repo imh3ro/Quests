@@ -2657,6 +2657,7 @@ public class QuestStageMainPrompt extends QuestsEditorNumericPrompt {
                 }
                 text.append(objName).append(" -\n");
                 int index = 1;
+                //TODO Use TextComponents and add click event support just like other menus.
                 for (final Entry<String, Object> dataMap : found.getData()) {
                     if (dataMapList != null) {
                         for (final Entry<String, Object> currentData : dataMapList) {
