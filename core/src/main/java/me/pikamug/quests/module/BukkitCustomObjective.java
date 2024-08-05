@@ -224,6 +224,7 @@ public class BukkitCustomObjective implements CustomObjective, Listener {
                 int index = -1;
                 final BukkitQuestProgress bukkitQuestProgress = (BukkitQuestProgress) quester.getQuestProgressOrDefault(bukkitQuest);
                 final LinkedList<Integer> customObjCounts = bukkitQuestProgress.customObjectiveCounts;
+                int goal = -1;
                 for (final CustomObjective co : quester.getCurrentStage(bukkitQuest).getCustomObjectives()) {
                     index++;
                     if (co.getName().equals(this.getName())) {
@@ -233,13 +234,14 @@ public class BukkitCustomObjective implements CustomObjective, Listener {
                             continue;
                         }
                         final int old = customObjCounts.get(index);
+                        goal = quester.getCurrentStage(bukkitQuest).getCustomObjectiveCounts().get(index);
 
                         // If old progress is higher than goal, we don't increase the progress.
-                        if (old>= customObj.getCount())
+                        if (old >= goal)
                             return;
 
                         // Clamp the progress at goal
-                        int newProgress = Math.min(old + count, customObj.getCount());
+                        int newProgress = Math.min(old + count, goal);
 
                         bukkitQuestProgress.customObjectiveCounts.set(index, newProgress);
                         break;
@@ -247,7 +249,7 @@ public class BukkitCustomObjective implements CustomObjective, Listener {
                 }
                 if (index > -1) {
                     final int progress = customObjCounts.get(index);
-                    final int goal = quester.getCurrentStage(bukkitQuest).getCustomObjectiveCounts().get(index);
+//
 
                     final ObjectiveType type = ObjectiveType.CUSTOM;
                     final BukkitQuesterPreUpdateObjectiveEvent preEvent
@@ -260,12 +262,13 @@ public class BukkitCustomObjective implements CustomObjective, Listener {
 
                         // Multiplayer
                         final int finalIndex = index;
+                        final int finalGoal = goal;
                         quester.dispatchMultiplayerObjectives(bukkitQuest, quester.getCurrentStage(bukkitQuest), (final Quester q) -> {
                             final BukkitQuestProgress qBukkitQuestProgress = (BukkitQuestProgress) q.getQuestProgressOrDefault(bukkitQuest);
                             final int old = qBukkitQuestProgress.customObjectiveCounts.get(finalIndex);
                             qBukkitQuestProgress.customObjectiveCounts.set(finalIndex, old + count);
                             q.finishObjective(bukkitQuest, new BukkitObjective(type, null, new ItemStack(Material.AIR, 1),
-                                    new ItemStack(Material.AIR, goal)), null, null, null, null, null, null, bukkitCustomObj);
+                                    new ItemStack(Material.AIR, finalGoal)), null, null, null, null, null, null, bukkitCustomObj);
                             return null;
                         });
                     }
