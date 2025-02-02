@@ -28,7 +28,12 @@ public interface BukkitNpcDependency extends NpcDependency {
 
     default @NotNull Map<UUID, Location> getNpcsByNearbyLocationSquared(final Location location, final double radius) {
         if (location.getWorld() == null) return Collections.emptyMap();
-        return getNpcsByLocationPredicate((uuid, npcLocation) ->
-                npcLocation.getWorld().getUID().equals(location.getWorld().getUID()) && location.distanceSquared(npcLocation) < radius);
+        return getNpcsByLocationPredicate((uuid, npcLocation) -> {
+            if (npcLocation.getWorld()==null)
+                return false;
+
+            return npcLocation.getWorld().getUID().equals(location.getWorld().getUID()) && location.distanceSquared(npcLocation) < radius;
+        });
+
     }
 }
