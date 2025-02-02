@@ -245,6 +245,7 @@ public class BukkitQuest implements Quest {
             plugin.getLogger().severe("Current stage was null for quester " + quester.getPlayer().getUniqueId());
             return;
         }
+
         final String stageCompleteMessage = currentStage.getCompleteMessage();
         if (stageCompleteMessage != null) {
             if (quester.getOfflinePlayer().isOnline()) {
@@ -252,6 +253,7 @@ public class BukkitQuest implements Quest {
                         this, quester.getPlayer()));
             }
         }
+
         if (currentStage.getDelay() < 0) {
             doNextStage(quester, allowSharedProgress);
         } else {
@@ -715,7 +717,7 @@ public class BukkitQuest implements Quest {
                 quester.getTimers().remove(entry.getKey());
             }
         }
-        if (player.isOnline()) {
+        if (!options.isSilent() && player.isOnline()) {
             final Player p = (Player)player;
             final String[] ps = BukkitConfigUtil.parseStringWithPossibleLineBreaks(ChatColor.AQUA
                     + finished, this, p);
@@ -874,7 +876,7 @@ public class BukkitQuest implements Quest {
         }
         
         // Inform player
-        if (player.isOnline()) {
+        if (!options.isSilent() && player.isOnline()) {
             final Player p = (Player)player;
             BukkitLang.send(p, ChatColor.GOLD + BukkitLang.get(p, "questCompleteTitle").replace("<quest>", name));
             if (plugin.getConfigSettings().canShowQuestTitles()) {

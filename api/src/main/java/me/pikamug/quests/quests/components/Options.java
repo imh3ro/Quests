@@ -52,4 +52,6 @@ public interface Options {
     void setIgnoreBlockReplace(final boolean ignoreBlockReplace);
     void setSendConditionFailMessage(final boolean sendConditionFailMessage);
     boolean canSendConditionFailMessage();
+    void setSilent(final boolean disableMessages);
+    boolean isSilent();
 }

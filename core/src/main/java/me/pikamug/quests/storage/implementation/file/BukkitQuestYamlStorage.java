@@ -771,6 +771,8 @@ public class BukkitQuestYamlStorage implements QuestStorageImpl {
         }
         if (config.contains("quests." + questKey + ".options.send-condition-fail-message")) {
             opts.setSendConditionFailMessage(config.getBoolean("quests." + questKey + ".options.send-condition-fail-message"));
+        }if (config.contains("quests." + questKey + ".options.silent")) {
+            opts.setSilent(config.getBoolean("quests." + questKey + ".options.silent"));
         }
     }
 

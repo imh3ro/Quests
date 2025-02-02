@@ -21,7 +21,9 @@ public class BukkitOptions implements Options {
     private int shareProgressLevel = 1;
     private boolean shareSameQuestOnly = true;
     private boolean ignoreBlockReplace = true;
-    private boolean sendConditionFailMessage = true;
+
+    private boolean sendConditionFailMessage = false;
+    private boolean silent = true;
 
     public boolean canAllowCommands() {
         return allowCommands;
@@ -111,6 +113,15 @@ public class BukkitOptions implements Options {
     @Override
     public boolean canSendConditionFailMessage() {
         return sendConditionFailMessage;
+    }
+
+    public void setSilent(boolean disableMessages) {
+        this.silent = disableMessages;
+    }
+
+    @Override
+    public boolean isSilent() {
+        return silent;
     }
 
 

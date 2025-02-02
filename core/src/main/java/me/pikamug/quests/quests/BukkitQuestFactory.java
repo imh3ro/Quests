@@ -273,6 +273,7 @@ public class BukkitQuestFactory implements QuestFactory, ConversationAbandonedLi
             context.setSessionData(Key.OPT_HANDLE_OFFLINE_PLAYERS, opt.canHandleOfflinePlayers());
             context.setSessionData(Key.OPT_IGNORE_BLOCK_REPLACE, opt.canIgnoreBlockReplace());
             context.setSessionData(Key.OPT_SEND_CONDITION_FAIL_MESSAGE, opt.canSendConditionFailMessage());
+            context.setSessionData(Key.OPT_SILENT, opt.isSilent());
             // Stages (Objectives)
             int index = 1;
             for (final Stage stage : bukkitQuest.getStages()) {
@@ -920,6 +921,8 @@ public class BukkitQuestFactory implements QuestFactory, ConversationAbandonedLi
                 ? context.getSessionData(Key.OPT_IGNORE_BLOCK_REPLACE) : null);
         opts.set("send-condition-fail-message", context.getSessionData(Key.OPT_SEND_CONDITION_FAIL_MESSAGE) != null
                 ? context.getSessionData(Key.OPT_SEND_CONDITION_FAIL_MESSAGE) : null);
+        opts.set("silent", context.getSessionData(Key.OPT_SILENT) != null
+                ? context.getSessionData(Key.OPT_SILENT) : null);
         if (opts.getKeys(false).isEmpty()) {
             section.set("options", null);
         }

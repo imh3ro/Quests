@@ -408,7 +408,7 @@ public class QuestOptionsPrompt extends QuestsEditorNumericPrompt {
             super(context);
         }
 
-        private final int size = 6;
+        private final int size = 7;
         
         @Override
         public int getSize() {
@@ -428,8 +428,9 @@ public class QuestOptionsPrompt extends QuestsEditorNumericPrompt {
             case 3:
             case 4:
             case 5:
-                return ChatColor.BLUE;
             case 6:
+                return ChatColor.BLUE;
+            case 7:
                 return ChatColor.GREEN;
             default:
                 return null;
@@ -450,6 +451,8 @@ public class QuestOptionsPrompt extends QuestsEditorNumericPrompt {
             case 5:
                 return ChatColor.YELLOW + BukkitLang.get("optSendConditionFailMessage");
             case 6:
+                return ChatColor.YELLOW + BukkitLang.get("optSilent");
+            case 7:
                 return ChatColor.YELLOW + BukkitLang.get("done");
             default:
                 return null;
@@ -510,6 +513,16 @@ public class QuestOptionsPrompt extends QuestsEditorNumericPrompt {
                             : ChatColor.RED + BukkitLang.get("false")) + ChatColor.GRAY + ")";
                 }
             case 6:
+                final Boolean silent = (Boolean) context.getSessionData(Key.OPT_SILENT);
+                if (silent == null) {
+                    final boolean defaultOpt = new BukkitOptions().isSilent();
+                    return ChatColor.GRAY + "(" + (defaultOpt ? ChatColor.GREEN + BukkitLang.get("true")
+                            : ChatColor.RED + BukkitLang.get("false")) + ChatColor.GRAY + ")";
+                } else {
+                    return ChatColor.GRAY + "(" + (silent ? ChatColor.GREEN + BukkitLang.get("true")
+                            : ChatColor.RED + BukkitLang.get("false")) + ChatColor.GRAY + ")";
+                }
+            case 7:
                 return "";
             default:
                 return null;
@@ -555,6 +568,10 @@ public class QuestOptionsPrompt extends QuestsEditorNumericPrompt {
                 tempPrompt = new QuestOptionsGeneralPrompt(context);
                 return new QuestOptionsTrueFalsePrompt(context);
             case 6:
+                tempKey = Key.OPT_SILENT;
+                tempPrompt = new QuestOptionsGeneralPrompt(context);
+                return new QuestOptionsTrueFalsePrompt(context);
+            case 7:
                 tempKey = null;
                 tempPrompt = null;
                 try {
