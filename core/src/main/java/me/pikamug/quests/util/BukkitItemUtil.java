@@ -10,7 +10,6 @@
 
 package me.pikamug.quests.util;
 
-import de.tr7zw.changeme.nbtapi.NBT;
 import me.pikamug.quests.util.stack.BlockItemStack;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -150,14 +149,17 @@ public class BukkitItemUtil {
                             || one.getType().equals(Material.SPLASH_POTION)) {
                         final PotionMeta pMeta1 = (PotionMeta) one.getItemMeta();
                         final PotionMeta pMeta2 = (PotionMeta) two.getItemMeta();
-                        if (!pMeta1.getBasePotionData().getType().equals(pMeta2.getBasePotionData().getType())) {
-                            return -9;
-                        }
-                        if (pMeta1.getBasePotionData().isExtended() != pMeta2.getBasePotionData().isExtended()) {
-                            return -9;
-                        }
-                        if (pMeta1.getBasePotionData().isUpgraded() != pMeta2.getBasePotionData().isUpgraded()) {
-                            return -9;
+                        // Base potion data can return null on newer versions (likely 1.20.6+)
+                        if (pMeta1.getBasePotionData() != null && pMeta2.getBasePotionData() != null) {
+                            if (!pMeta1.getBasePotionData().getType().equals(pMeta2.getBasePotionData().getType())) {
+                                return -9;
+                            }
+                            if (pMeta1.getBasePotionData().isExtended() != pMeta2.getBasePotionData().isExtended()) {
+                                return -9;
+                            }
+                            if (pMeta1.getBasePotionData().isUpgraded() != pMeta2.getBasePotionData().isUpgraded()) {
+                                return -9;
+                            }
                         }
                     }
                 }
@@ -233,9 +235,6 @@ public class BukkitItemUtil {
             if (mat.isBlock() && Material.getMaterial("CRAFTER") != null) {
                 // Paper 1.21+ does not allow ItemStack from unobtainable blocks (i.e. CARROTS block)
                 item = new ItemStack(mat.createBlockData().getPlacementMaterial(), amount);
-                NBT.modify(item, nbt -> {
-                    nbt.setShort("quests_age", durability);
-                });
             } else {
                 item = new ItemStack(mat, amount, durability);
             }
@@ -780,11 +779,14 @@ public class BukkitItemUtil {
         if (Material.getMaterial("LINGERING_POTION") == null) {
             return prettyString;
         }
+        if (!(itemMeta instanceof PotionMeta)) {
+            return prettyString;
+        }
         final PotionMeta meta = (PotionMeta) itemMeta;
-        if (meta != null && meta.getBasePotionData().isUpgraded()) {
+        if (meta.getBasePotionData().isUpgraded()) {
             final int level = meta.getBasePotionData().getType().name().contains("SLOWNESS") ? 4 : 2;
             prettyString = ChatColor.GREEN + RomanNumeral.getNumeral(level) + ChatColor.RESET;
-        } else if (meta != null && meta.getBasePotionData().isExtended()) {
+        } else if (meta.getBasePotionData().isExtended()) {
             prettyString = ChatColor.GREEN + "+" + ChatColor.RESET;
         }
         return prettyString;

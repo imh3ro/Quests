@@ -23,16 +23,7 @@ import me.pikamug.quests.convo.misc.QuestAcceptPrompt;
 import me.pikamug.quests.dependencies.BukkitDenizenTrigger;
 import me.pikamug.quests.dependencies.BukkitDependencies;
 import me.pikamug.quests.interfaces.ReloadCallback;
-import me.pikamug.quests.listeners.BukkitBlockListener;
-import me.pikamug.quests.listeners.BukkitCitizensListener;
-import me.pikamug.quests.listeners.BukkitCommandManager;
-import me.pikamug.quests.listeners.BukkitConvoListener;
-import me.pikamug.quests.listeners.BukkitItemListener;
-import me.pikamug.quests.listeners.BukkitPartiesListener;
-import me.pikamug.quests.listeners.BukkitPlayerListener;
-import me.pikamug.quests.listeners.BukkitUniteListener;
-import me.pikamug.quests.listeners.BukkitZnpcsApiListener;
-import me.pikamug.quests.listeners.BukkitZnpcsListener;
+import me.pikamug.quests.listeners.*;
 import me.pikamug.quests.logging.BukkitQuestsLog4JFilter;
 import me.pikamug.quests.module.CustomObjective;
 import me.pikamug.quests.module.CustomRequirement;
@@ -52,6 +43,7 @@ import me.pikamug.quests.storage.implementation.jar.BukkitModuleJarStorage;
 import me.pikamug.quests.tasks.BukkitNpcEffectThread;
 import me.pikamug.quests.tasks.BukkitPlayerMoveThread;
 import me.pikamug.quests.util.BukkitLang;
+import me.pikamug.quests.util.BukkitMiscUtil;
 import me.pikamug.quests.util.BukkitUpdateChecker;
 import me.pikamug.quests.util.stack.BlockItemStacks;
 import org.apache.logging.log4j.LogManager;
@@ -67,18 +59,9 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URISyntaxException;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -110,9 +93,6 @@ public class BukkitQuestsPlugin extends JavaPlugin implements Quests {
     private BukkitConvoListener convoListener;
     private BukkitBlockListener blockListener;
     private BukkitItemListener itemListener;
-    private BukkitCitizensListener citizensListener;
-    private BukkitZnpcsListener znpcsListener;
-    private BukkitZnpcsApiListener znpcsPlusListener;
     private BukkitPlayerListener playerListener;
     private BukkitNpcEffectThread effectThread;
     private BukkitPlayerMoveThread moveThread;
@@ -144,17 +124,13 @@ public class BukkitQuestsPlugin extends JavaPlugin implements Quests {
         try {
             Class.forName("me.pikamug.quests.libs.localelib.LocaleManager");
             localeManager = new LocaleManager();
-            BlockItemStacks.init(!localeManager.isBelow113());
         } catch (final Exception ignored) {
             getLogger().warning("LocaleLib not present! Is this a debug environment?");
         }
-
+        BlockItemStacks.init(!BukkitMiscUtil.isBelow113());
         convoListener = new BukkitConvoListener();
         blockListener = new BukkitBlockListener(this);
         itemListener = new BukkitItemListener(this);
-        citizensListener = new BukkitCitizensListener(this);
-        znpcsListener = new BukkitZnpcsListener(this);
-        znpcsPlusListener = new BukkitZnpcsApiListener(this);
         playerListener = new BukkitPlayerListener(this);
         uniteListener = new BukkitUniteListener();
         partiesListener = new BukkitPartiesListener();
@@ -231,11 +207,6 @@ public class BukkitQuestsPlugin extends JavaPlugin implements Quests {
         // 11 - Register listeners
         getServer().getPluginManager().registerEvents(getBlockListener(), this);
         getServer().getPluginManager().registerEvents(getItemListener(), this);
-        depends.linkCitizens();
-        if (depends.getZnpcsPlus() != null) {
-            getServer().getPluginManager().registerEvents(getZnpcsListener(), this);
-        }
-        depends.linkZnpcsPlusApi();
         getServer().getPluginManager().registerEvents(getPlayerListener(), this);
         if (configSettings.getStrictPlayerMovement() > 0) {
             final long ticks = configSettings.getStrictPlayerMovement() * 20L;
@@ -265,7 +236,7 @@ public class BukkitQuestsPlugin extends JavaPlugin implements Quests {
         for (final Player p : getServer().getOnlinePlayers()) {
             getQuester(p.getUniqueId()).saveData();
         }
-        Bukkit.getScheduler().cancelTasks(this);
+        getServer().getScheduler().cancelTasks(this);
         getLogger().info("Closing storage...");
         if (storage != null) {
             storage.close();
@@ -423,10 +394,8 @@ public class BukkitQuestsPlugin extends JavaPlugin implements Quests {
             }
         }
         final BukkitQuester quester = new BukkitQuester(this, id);
-        if (depends.getCitizens() != null) {
-            if (depends.getCitizens().getNPCRegistry().getByUniqueId(id) != null) {
-                return quester;
-            }
+        if (depends.isNpc(id)) {
+            return quester;
         }
         final BukkitQuester q = new BukkitQuester(this, id);
         questers.add(q);
@@ -526,18 +495,6 @@ public class BukkitQuestsPlugin extends JavaPlugin implements Quests {
 
     public BukkitItemListener getItemListener() {
         return itemListener;
-    }
-
-    public BukkitCitizensListener getCitizensListener() {
-        return citizensListener;
-    }
-
-    public BukkitZnpcsListener getZnpcsListener() {
-        return znpcsListener;
-    }
-
-    public BukkitZnpcsApiListener getZNpcsPlusListener() {
-        return znpcsPlusListener;
     }
 
     public BukkitPlayerListener getPlayerListener() {
@@ -661,36 +618,31 @@ public class BukkitQuestsPlugin extends JavaPlugin implements Quests {
             questLoader.init();
             getLogger().log(Level.INFO, "Loaded " + quests.size() + " Quest(s), " + actions.size() + " Action(s), "
                     + conditions.size() + " Condition(s) and " + BukkitLang.size() + " Phrase(s)");
-            for (final Player p : getServer().getOnlinePlayers()) {
-                final Quester quester =  new BukkitQuester(BukkitQuestsPlugin.this, p.getUniqueId());
-                if (!quester.hasData()) {
-                    quester.saveData();
-                }
-                // Workaround for issues with the compass on fast join
-                quester.findCompassTarget();
-                questers.add(quester);
-            }
-            if (depends.getCitizens() != null) {
-                if (depends.getCitizens().getNPCRegistry() == null) {
-                    getLogger().log(Level.SEVERE,
-                            "Citizens was enabled but NPCRegistry was null. Disabling linkage.");
-                    depends.unlinkCitizens();
-                }
-            }
-            if (depends.getZnpcsPlusApi() != null) {
-                if (depends.getZnpcsPlusApi().getNpcRegistry() == null) {
-                    getLogger().log(Level.SEVERE,
-                            "ZNPCsPlus was enabled but NpcRegistry was null. Disabling linkage.");
-                    depends.unlinkZnpcsPlusApi();
-                }
-            }
             customLoader.init();
             questLoader.importQuests();
             if (getConfigSettings().canDisableCommandFeedback()) {
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "gamerule sendCommandFeedback false");
             }
-            loading = false;
+            getServer().getScheduler().runTaskAsynchronously(this, () -> {
+                try {
+                    questers = storage.loadOfflineQuesters().get();
+                } catch (final Exception e) {
+                    e.printStackTrace();
+                }
+            });
         }, 5L);
+        getServer().getScheduler().scheduleSyncDelayedTask(this, () -> {
+            // Workaround for issues with the Compass on fast join
+            for (final Player p : getServer().getOnlinePlayers()) {
+                final Quester quester =  new BukkitQuester(BukkitQuestsPlugin.this, p.getUniqueId());
+                if (!quester.hasData()) {
+                    quester.saveData();
+                }
+                quester.findCompassTarget();
+                questers.add(quester);
+            }
+            loading = false;
+        }, 60L);
     }
 
     /**
@@ -703,7 +655,7 @@ public class BukkitQuestsPlugin extends JavaPlugin implements Quests {
         }
         loading = true;
         reloadConfig();
-        Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+        getServer().getScheduler().runTaskAsynchronously(this, () -> {
             try {
                 getStorage().saveOfflineQuesters().get();
                 BukkitLang.clear();
@@ -747,7 +699,7 @@ public class BukkitQuestsPlugin extends JavaPlugin implements Quests {
             exception.printStackTrace();
         }
         if (callback != null) {
-            Bukkit.getScheduler().runTask(BukkitQuestsPlugin.this, () -> {
+            getServer().getScheduler().runTask(BukkitQuestsPlugin.this, () -> {
                 loading = false;
                 callback.execute(result);
             });
